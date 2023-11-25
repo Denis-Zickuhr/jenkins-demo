@@ -8,10 +8,10 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Test') {
             steps {
                 script {
-                    def mvnOutput = bat(script: 'mvn clean install', returnStatus: true)
+                    def mvnOutput = bat(script: 'mvn test', returnStatus: true)
 
                     if (mvnOutput == 0) {
                         echo "Build status: SUCCESS"
@@ -24,15 +24,23 @@ pipeline {
             }
         }
 
-//         stage('Deploy to Homologation') {
-//             when {
-//                 expression { env.BRANCH_NAME == 'dev' && env.BUILD_STATUS == 'SUCCESS' }
-//             }
-//             steps {
-//                 bat 'git add .'
-//                 bat 'git commit -m "Deploy to homologation"'
-//                 bat 'git push origin homologation'
-//             }
-//         }
+        stage('Deploy to Homologation') {
+            when {
+                expression { env.BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    script {
+                        def REPO_URL = "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Denis-Zickuhr/jenkins-demo.git"
+                        bat 'git config --global credential.helper "store --file=.git-credentials"'
+                        bat 'git config --global user.email "coringatheboss@gmail.com"'
+                        bat 'git config --global user.name "${GIT_USERNAME}"'
+                        bat 'git checkout homologation'
+                        bat 'git merge origin/dev'
+                        bat "git push ${REPO_URL}"
+                    }
+                }
+            }
+        }
     }
 }
