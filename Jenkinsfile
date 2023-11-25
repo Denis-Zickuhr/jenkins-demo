@@ -10,25 +10,29 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                script {
+                    def mvnOutput = bat(script: 'mvn clean install', returnStatus: true)
+
+                    if (mvnOutput == 0) {
+                        echo "Build status: SUCCESS"
+                        currentBuild.result = 'SUCCESS'
+                    } else {
+                        echo "Build status: FAILURE"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Deploy to Homologation') {
-            when {
-                expression { env.BRANCH_NAME == 'dev' && buildStatus == 'SUCCESS' }
-            }
-            steps {
-                sh 'git add .'
-                sh 'git commit -m "Deploy to homologation"'
-                sh 'git push origin homologation'
-            }
-        }
+//         stage('Deploy to Homologation') {
+//             when {
+//                 expression { env.BRANCH_NAME == 'dev' && env.BUILD_STATUS == 'SUCCESS' }
+//             }
+//             steps {
+//                 bat 'git add .'
+//                 bat 'git commit -m "Deploy to homologation"'
+//                 bat 'git push origin homologation'
+//             }
+//         }
     }
 }
