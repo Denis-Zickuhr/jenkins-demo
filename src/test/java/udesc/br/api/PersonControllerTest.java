@@ -72,28 +72,7 @@ class PersonControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("John"));
     }
 
-    @Test
-    void updatePerson() throws Exception {
-        Long id = 1L;
-        Person existingPerson = new Person();
-        existingPerson.setId(id);
-        existingPerson.setFirstName("OldFirstName");
-
-        Person updatedPerson = new Person();
-        updatedPerson.setFirstName("NewFirstName");
-
-        when(personRepository.findById(id)).thenReturn(Optional.of(existingPerson));
-        when(personRepository.save(any(Person.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(personController).build();
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/persons/{id}", id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\":\"NewFirstName\",\"lastName\":\"Doe\",\"age\":30}"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("NewFirstName"));
-    }
-
+    // working test
 //    @Test
 //    void updatePerson() throws Exception {
 //        Long id = 1L;
@@ -104,17 +83,40 @@ class PersonControllerTest {
 //        Person updatedPerson = new Person();
 //        updatedPerson.setFirstName("NewFirstName");
 //
-//        // Simulate an error when saving the updated person
 //        when(personRepository.findById(id)).thenReturn(Optional.of(existingPerson));
-//        when(personRepository.save(any(Person.class))).thenThrow(new RuntimeException("Error saving person"));
+//        when(personRepository.save(any(Person.class))).thenAnswer(invocation -> invocation.getArgument(0));
 //
 //        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(personController).build();
 //
 //        mockMvc.perform(MockMvcRequestBuilders.put("/persons/{id}", id)
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content("{\"firstName\":\"NewFirstName\",\"lastName\":\"Doe\",\"age\":30}"))
-//                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+//                .andExpect(MockMvcResultMatchers.status().isOk())
+//                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("NewFirstName"));
 //    }
+
+    // broken test
+    @Test
+    void updatePerson() throws Exception {
+        Long id = 1L;
+        Person existingPerson = new Person();
+        existingPerson.setId(id);
+        existingPerson.setFirstName("OldFirstName");
+
+        Person updatedPerson = new Person();
+        updatedPerson.setFirstName("NewFirstName");
+
+        // Simulate an error when saving the updated person
+        when(personRepository.findById(id)).thenReturn(Optional.of(existingPerson));
+        when(personRepository.save(any(Person.class))).thenThrow(new RuntimeException("Error saving person"));
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(personController).build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/persons/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\":\"NewFirstName\",\"lastName\":\"Doe\",\"age\":30}"))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+    }
 
     @Test
     void deletePerson() throws Exception {
